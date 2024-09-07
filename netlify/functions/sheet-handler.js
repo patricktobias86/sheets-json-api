@@ -1,5 +1,3 @@
-const fetch = require("node-fetch"); // Import fetch in Node.js environment
-
 exports.handler = async function (event) {
   const url = new URL(event.rawUrl);
 
@@ -7,7 +5,7 @@ exports.handler = async function (event) {
     return {
       statusCode: 302,
       headers: {
-        Location: "https://github.com/benborgers/opensheet#readme",
+        Location: "https://github.com/patricktobias86/google-sheets-api#readme",
       },
       body: "",
     };
