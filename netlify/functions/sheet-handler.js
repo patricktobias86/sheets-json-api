@@ -1,3 +1,5 @@
+import { Config, Context } from "@netlify/functions";
+
 exports.handler = async function (event) {
   const url = new URL(event.rawUrl);
 
