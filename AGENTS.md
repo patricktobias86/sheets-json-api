@@ -6,3 +6,4 @@
 - `public` should contain all public assets.
 - Serverless functions are in `netlify/edge-functions`.
 - Keep README and AGENTS.md updated when changes are made
+- Tests are located in `test` and run with `npm test`.
