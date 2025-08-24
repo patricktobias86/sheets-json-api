@@ -11,7 +11,7 @@ export default async function handler(request: Request, context: Context) {
   const url = new URL(request.url);
 
   if (url.pathname === "/") {
-    return Response.redirect("https://github.com/benborgers/opensheet#readme", 302);
+    return context.next();
   }
 
   let [id, sheet, ...otherParams] = url.pathname

@@ -32,3 +32,10 @@ test('redirects to first sheet when sheet is missing', async () => {
     'https://example.com/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y/1'
   );
 });
+
+test('falls back to static content on root path', async () => {
+  const nextResponse = new Response('ok');
+  const req = new Request('https://example.com/');
+  const res = await handler(req, { next: () => nextResponse, waitUntil: () => {} } as any);
+  assert.strictEqual(res, nextResponse);
+});

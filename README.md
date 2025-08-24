@@ -2,6 +2,8 @@
 
 An API that converts Google Sheets into JSON, served via a Netlify Edge Function.
 
+Visiting the root URL shows a form where you can paste a Google Sheets link. The form rewrites the link to a valid API URL and redirects you there.
+
 ## Usage
 
 Requests follow the pattern `/SPREADSHEET_ID/sheet_name_or_number`. If the sheet

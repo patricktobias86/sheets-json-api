@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google Sheets JSON API</title>
+  </head>
+  <body>
+    <h1>Google Sheets JSON API</h1>
+    <form id="sheet-form">
+      <label for="sheet-url">Google Sheet URL</label>
+      <input
+        type="url"
+        id="sheet-url"
+        placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=0"
+        required
+      />
+      <button type="submit">Open</button>
+    </form>
+    <script>
+      const API_KEY = 'AIzaSyC6y93Jo0fA1GH54L7VOkJzgZkiaXSSOOU';
+      document.getElementById('sheet-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('sheet-url').value.trim();
+        let id, gid;
+        try {
+          const url = new URL(input);
+          const match = url.pathname.match(/\/d\/([a-zA-Z0-9-_]+)/);
+          if (!match) throw new Error('Invalid URL');
+          id = match[1];
+          gid = url.searchParams.get('gid');
+          if (!gid) {
+            const hashParams = new URLSearchParams(url.hash.slice(1));
+            gid = hashParams.get('gid');
+          }
+          gid = gid || '0';
+        } catch (err) {
+          alert('Please enter a valid Google Sheets URL.');
+          return;
+        }
+
+        let sheet = '1';
+        if (gid !== '0') {
+          try {
+            const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=sheets(properties(sheetId,title))&key=${API_KEY}`);
+            const meta = await metaRes.json();
+            const sheetInfo = meta.sheets?.find((s) => String(s.properties.sheetId) === gid);
+            if (sheetInfo) {
+              sheet = encodeURIComponent(sheetInfo.properties.title);
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }
+
+        window.location.href = `/${id}/${sheet}`;
+      });
+    </script>
+  </body>
+</html>
