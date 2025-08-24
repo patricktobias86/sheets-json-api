@@ -39,3 +39,33 @@ test('falls back to static content on root path', async () => {
   const res = await handler(req, { next: () => nextResponse, waitUntil: () => {} } as any);
   assert.strictEqual(res, nextResponse);
 });
+
+test('uses Deno env when process env missing', async () => {
+  const originalKey = process.env.GOOGLE_API_KEY;
+  delete process.env.GOOGLE_API_KEY;
+
+  (globalThis as any).Deno = { env: { get: () => 'FAKE_KEY' } };
+  (globalThis as any).caches = {
+    default: {
+      async match() {
+        return undefined;
+      },
+      async put() {},
+    },
+  };
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response(
+      JSON.stringify({ values: [["headline"], ["It's working!"]] })
+    );
+
+  const req = new Request('https://example.com/test-sheet/Sheet1');
+  const res = await handler(req, context);
+  const data = await res.json();
+  assert.deepStrictEqual(data, [{ headline: "It's working!" }]);
+
+  globalThis.fetch = originalFetch;
+  delete (globalThis as any).Deno;
+  process.env.GOOGLE_API_KEY = originalKey;
+});
