@@ -1,7 +1,7 @@
 {
   "name": "google-sheets-api",
   "version": "1.0.0",
-  "private": true,
+  "license": "MIT",
   "description": "An API to get a Google Sheet as JSON, no authentication required.",
   "homepage": "https://github.com/patricktobias86/google-sheets-api#readme",
   "bugs": {
@@ -11,7 +11,6 @@
     "type": "git",
     "url": "git+https://github.com/patricktobias86/google-sheets-api.git"
   },
-  "license": "ISC",
   "author": "patricktobias86",
   "type": "commonjs",
   "main": "index.js",
