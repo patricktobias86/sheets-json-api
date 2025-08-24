@@ -25,6 +25,12 @@ https://sheets-json-api.netlify.app/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y
 
 The Edge Function lives in `netlify/edge-functions/opensheet.ts`.
 
+### Environment variables
+
+The function looks for a `GOOGLE_API_KEY` value using `process.env` in Node or
+`Deno.env.get` in Netlify's Edge runtime. When the variable is absent, a default
+API key is used.
+
 ### Running tests
 
 ```sh
