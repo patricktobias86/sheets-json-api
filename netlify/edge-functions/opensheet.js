@@ -34,13 +34,15 @@ export default async function handler(request, context) {
 
   // Try cache first (Edge Cache API)
   const cacheKey = `https://sheets-json-api.netlify.app/${id}/${encodeURIComponent(sheet)}`;
-  const cache = caches.default;
-  const cachedResponse = await cache.match(cacheKey);
-  if (cachedResponse) {
-    console.log(`Serving from cache: ${cacheKey}`);
-    return cachedResponse;
-  } else {
-    console.log(`Cache miss: ${cacheKey}`);
+  const cache = globalThis.caches?.default;
+  if (cache) {
+    const cachedResponse = await cache.match(cacheKey);
+    if (cachedResponse) {
+      console.log(`Serving from cache: ${cacheKey}`);
+      return cachedResponse;
+    } else {
+      console.log(`Cache miss: ${cacheKey}`);
+    }
   }
 
   // Normalize sheet (handle '+' and decode)
@@ -104,7 +106,9 @@ export default async function handler(request, context) {
   });
 
   // Write to cache in the background
-  context.waitUntil(cache.put(cacheKey, apiResponse.clone()));
+  if (cache) {
+    context.waitUntil(cache.put(cacheKey, apiResponse.clone()));
+  }
 
   return apiResponse;
 }

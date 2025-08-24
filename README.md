@@ -31,6 +31,12 @@ The function looks for a `GOOGLE_API_KEY` value using `process.env` in Node or
 `Deno.env.get` in Netlify's Edge runtime. When the variable is absent, a default
 API key is used.
 
+### Caching
+
+Responses are cached for 30 seconds using the Edge Cache API when available. If
+the runtime does not support the cache API, the function skips caching but still
+returns live data.
+
 ### Running tests
 
 ```sh

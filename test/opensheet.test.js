@@ -40,6 +40,21 @@ test('falls back to static content on root path', async () => {
   assert.strictEqual(res, nextResponse);
 });
 
+test('works when cache API is unavailable', async () => {
+  delete globalThis.caches;
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ values: [["name"], ["Ada"]] }));
+
+  const req = new Request('https://example.com/test-sheet/Sheet1');
+  const res = await handler(req, context);
+  const data = await res.json();
+  assert.deepStrictEqual(data, [{ name: 'Ada' }]);
+
+  globalThis.fetch = originalFetch;
+});
+
 test('uses Deno env when process env missing', async () => {
   const originalKey = process.env.GOOGLE_API_KEY;
   delete process.env.GOOGLE_API_KEY;
