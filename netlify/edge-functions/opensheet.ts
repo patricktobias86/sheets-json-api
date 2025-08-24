@@ -19,7 +19,15 @@ export default async function handler(request: Request, context: Context) {
     .split("/")
     .filter((x) => x);
 
-  if (!id || !sheet || otherParams.length > 0) {
+  if (!id) {
+    return error("URL format is /spreadsheet_id/sheet_name", 404);
+  }
+
+  if (!sheet) {
+    return Response.redirect(`${url.origin}/${id}/1`, 302);
+  }
+
+  if (otherParams.length > 0) {
     return error("URL format is /spreadsheet_id/sheet_name", 404);
   }
 

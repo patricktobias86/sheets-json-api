@@ -22,3 +22,13 @@ test('returns rows from Google Sheet', async () => {
   assert(Array.isArray(data));
   assert.ok(data.length > 0);
 });
+
+test('redirects to first sheet when sheet is missing', async () => {
+  const req = new Request('https://example.com/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y');
+  const res = await handler(req, context);
+  assert.strictEqual(res.status, 302);
+  assert.strictEqual(
+    res.headers.get('Location'),
+    'https://example.com/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y/1'
+  );
+});
