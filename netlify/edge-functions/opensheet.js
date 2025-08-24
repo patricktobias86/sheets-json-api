@@ -1,11 +1,9 @@
-// netlify/edge-functions/opensheet.ts
+// netlify/edge-functions/opensheet.js
 
-import type { Context } from "@netlify/edge-functions";
-
-export default async function handler(request: Request, context: Context) {
+export default async function handler(request, context) {
   const GOOGLE_API_KEY =
-    ((globalThis as any).process?.env?.GOOGLE_API_KEY ??
-      (globalThis as any).Deno?.env?.get("GOOGLE_API_KEY"))?.trim() ||
+    (globalThis.process?.env?.GOOGLE_API_KEY ??
+      globalThis.Deno?.env?.get("GOOGLE_API_KEY"))?.trim() ||
     "AIzaSyC6y93Jo0fA1GH54L7VOkJzgZkiaXSSOOU";
   if (!GOOGLE_API_KEY) {
     return error("Missing GOOGLE_API_KEY environment variable", 500);
@@ -49,7 +47,7 @@ export default async function handler(request: Request, context: Context) {
   sheet = decodeURIComponent(sheet.replace(/\+/g, " "));
 
   // If numeric, treat as 1-based sheet index and look up sheet title
-  if (!isNaN(sheet as unknown as number)) {
+  if (!isNaN(sheet)) {
     if (parseInt(sheet, 10) === 0) {
       return error("For this API, sheet numbers start at 1");
     }
@@ -84,12 +82,12 @@ export default async function handler(request: Request, context: Context) {
     return error(result.error.message, valuesRes.status || 400);
   }
 
-  const rows: Record<string, string>[] = [];
-  const rawRows: string[][] = result.values || [];
-  const headers: string[] = rawRows.shift() || [];
+  const rows = [];
+  const rawRows = result.values || [];
+  const headers = rawRows.shift() || [];
 
   rawRows.forEach((row) => {
-    const rowData: Record<string, string> = {};
+    const rowData = {};
     row.forEach((item, index) => {
       rowData[headers[index]] = item;
     });
@@ -111,7 +109,7 @@ export default async function handler(request: Request, context: Context) {
   return apiResponse;
 }
 
-function error(message: string, status = 400) {
+function error(message, status = 400) {
   return new Response(JSON.stringify({ error: message }), {
     status,
     headers: {

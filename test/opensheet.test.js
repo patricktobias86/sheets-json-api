@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import handler from '../netlify/edge-functions/opensheet';
+import handler from '../netlify/edge-functions/opensheet.js';
 
-const context = { waitUntil: () => {} } as any;
+const context = { waitUntil: () => {} };
 
 test('returns rows from Google Sheet', async () => {
-  (globalThis as any).caches = {
+  globalThis.caches = {
     default: {
       async match() {
         return undefined;
@@ -36,7 +36,7 @@ test('redirects to first sheet when sheet is missing', async () => {
 test('falls back to static content on root path', async () => {
   const nextResponse = new Response('ok');
   const req = new Request('https://example.com/');
-  const res = await handler(req, { next: () => nextResponse, waitUntil: () => {} } as any);
+  const res = await handler(req, { next: () => nextResponse, waitUntil: () => {} });
   assert.strictEqual(res, nextResponse);
 });
 
@@ -44,8 +44,8 @@ test('uses Deno env when process env missing', async () => {
   const originalKey = process.env.GOOGLE_API_KEY;
   delete process.env.GOOGLE_API_KEY;
 
-  (globalThis as any).Deno = { env: { get: () => 'FAKE_KEY' } };
-  (globalThis as any).caches = {
+  globalThis.Deno = { env: { get: () => 'FAKE_KEY' } };
+  globalThis.caches = {
     default: {
       async match() {
         return undefined;
@@ -66,6 +66,6 @@ test('uses Deno env when process env missing', async () => {
   assert.deepStrictEqual(data, [{ headline: "It's working!" }]);
 
   globalThis.fetch = originalFetch;
-  delete (globalThis as any).Deno;
+  delete globalThis.Deno;
   process.env.GOOGLE_API_KEY = originalKey;
 });
