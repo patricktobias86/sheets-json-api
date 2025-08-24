@@ -23,7 +23,7 @@ https://sheets-json-api.netlify.app/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y
 
 ## Development
 
-The Edge Function lives in `netlify/edge-functions/opensheet.ts`.
+The Edge Function lives in `netlify/edge-functions/opensheet.js`.
 
 ### Environment variables
 
