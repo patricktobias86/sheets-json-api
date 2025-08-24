@@ -1,0 +1,28 @@
+{
+  "name": "google-sheets-api",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "An API to get a Google Sheet as JSON, no authentication required.",
+  "homepage": "https://github.com/patricktobias86/google-sheets-api#readme",
+  "bugs": {
+    "url": "https://github.com/patricktobias86/google-sheets-api/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/patricktobias86/google-sheets-api.git"
+  },
+  "author": "patricktobias86",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test -r ts-node/register"
+  },
+  "dependencies": {
+    "@netlify/edge-functions": "^2.17.1",
+    "dotenv": "^17.2.1"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
