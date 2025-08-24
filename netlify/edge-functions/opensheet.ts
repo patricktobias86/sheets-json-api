@@ -1,10 +1,9 @@
 // netlify/edge-functions/opensheet.ts
 
 import type { Context } from "@netlify/edge-functions";
-import dotenv;
 
 export default async function handler(request: Request, context: Context) {
-  const GOOGLE_API_KEY = env.get("GOOGLE_API_KEY")?.trim() || "AIzaSyC6y93Jo0fA1GH54L7VOkJzgZkiaXSSOOU" ;
+  const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY?.trim() || "AIzaSyC6y93Jo0fA1GH54L7VOkJzgZkiaXSSOOU";
   if (!GOOGLE_API_KEY) {
     return error("Missing GOOGLE_API_KEY environment variable", 500);
   }
