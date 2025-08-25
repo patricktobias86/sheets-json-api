@@ -1,60 +1,540 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Google Sheets JSON API</title>
-  </head>
-  <body>
-    <h1>Google Sheets JSON API</h1>
-    <form id="sheet-form">
-      <label for="sheet-url">Google Sheet URL</label>
-      <input
-        type="url"
-        id="sheet-url"
-        placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=0"
-        required
-      />
-      <button type="submit">Open</button>
-    </form>
-    <script>
-      const API_KEY = 'AIzaSyC6y93Jo0fA1GH54L7VOkJzgZkiaXSSOOU';
-      document.getElementById('sheet-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const input = document.getElementById('sheet-url').value.trim();
-        let id, gid;
-        try {
-          const url = new URL(input);
-          const match = url.pathname.match(/\/d\/([a-zA-Z0-9-_]+)/);
-          if (!match) throw new Error('Invalid URL');
-          id = match[1];
-          gid = url.searchParams.get('gid');
-          if (!gid) {
-            const hashParams = new URLSearchParams(url.hash.slice(1));
-            gid = hashParams.get('gid');
-          }
-          gid = gid || '0';
-        } catch (err) {
-          alert('Please enter a valid Google Sheets URL.');
-          return;
-        }
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <!-- Basic SEO -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Google Sheets → JSON (Instant Endpoints & Preview)</title>
+  <meta name="description" content="Turn a public Google Sheet into JSON in seconds. Paste the link, pick a tab, copy the endpoint, and preview live data. No sign-up. No libraries." />
+  <link rel="canonical" href="https://sheets-json-api.netlify.app/"/>
 
-        let sheet = '1';
-        if (gid !== '0') {
-          try {
-            const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=sheets(properties(sheetId,title))&key=${API_KEY}`);
-            const meta = await metaRes.json();
-            const sheetInfo = meta.sheets?.find((s) => String(s.properties.sheetId) === gid);
-            if (sheetInfo) {
-              sheet = encodeURIComponent(sheetInfo.properties.title);
-            }
-          } catch (err) {
-            console.error(err);
-          }
-        }
+  <!-- Open Graph / Twitter -->
+  <meta property="og:title" content="Google Sheets → JSON (Instant Endpoints & Preview)" />
+  <meta property="og:description" content="Paste a Google Sheet link and get JSON, CSV, and GViz endpoints with a live preview." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://sheets-json-api.netlify.app/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Google Sheets → JSON (Instant Endpoints & Preview)" />
+  <meta name="twitter:description" content="Get ready-made endpoints from a public Google Sheet and preview the data." />
 
-        window.location.href = `/${id}/${sheet}`;
+  <!-- Let the UA know we support both schemes -->
+  <meta name="color-scheme" content="dark light" />
+  <!-- Will be updated via JS on theme changes -->
+  <meta id="themeColor" name="theme-color" content="#0b0d12" />
+
+  <!-- JSON-LD: FAQ for rich results -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"FAQPage",
+    "mainEntity":[
+      {
+        "@type":"Question",
+        "name":"Do I need an API key?",
+        "acceptedAnswer":{"@type":"Answer","text":"No. This page builds public endpoints from a publicly shared Google Sheet."}
+      },
+      {
+        "@type":"Question",
+        "name":"Is my sheet private?",
+        "acceptedAnswer":{"@type":"Answer","text":"Only sheets you make public (or \"Anyone with the link: Viewer\") will work. Keep private data private."}
+      },
+      {
+        "@type":"Question",
+        "name":"Which endpoints can I use?",
+        "acceptedAnswer":{"@type":"Answer","text":"We generate GViz (JSON-like), CSV, TSV, and an example JSON endpoint pattern compatible with many fetch workflows."}
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    /* ===== THEME TOKENS ===== */
+    :root{
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+    /* Dark (default) */
+    html[data-theme="dark"]{
+      --bg: #0b0d12;
+      --bg-soft:#10131a;
+      --text: #eaf0ff;
+      --muted:#a6b2d0;
+      --primary:#0b5cff;
+      --primary-2:#2e74ff;
+      --accent:#29e0a9;
+      --danger:#ff5577;
+      --card:#0f1420;
+      --border: #1c2335;
+      --focus: #7aa2ff;
+      --code-bg:#0a0f1b;
+      --ring: rgba(122,162,255,.15);
+      --shadow-hero: radial-gradient(1200px 800px at 70% -10%, #183074 0%, transparent 60%);
+      --theme-color: #0b0d12;
+    }
+    /* Light */
+    html[data-theme="light"]{
+      --bg: #f8fafc;
+      --bg-soft:#f1f5f9;
+      --text: #0b1220;
+      --muted:#475569;
+      --primary:#215aff;
+      --primary-2:#4b76ff;
+      --accent:#0ea5a5;
+      --danger:#e11d48;
+      --card:#ffffff;
+      --border:#e5e7eb;
+      --focus:#3b82f6;
+      --code-bg:#0f172a0f;
+      --ring: rgba(59,130,246,.2);
+      --shadow-hero: radial-gradient(1200px 800px at 70% -10%, #c7d2fe 0%, transparent 60%);
+      --theme-color: #ffffff;
+    }
+
+    * { box-sizing:border-box }
+    html,body { height:100% }
+    body{
+      margin:0;
+      background: var(--shadow-hero), var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      line-height:1.45;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+    a{ color:var(--accent); text-decoration:none }
+    a:hover{ text-decoration:underline }
+    .container{
+      width:min(1100px, 92vw);
+      margin-inline:auto;
+      padding: clamp(20px, 4vw, 32px);
+    }
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      padding:12px 0 8px;
+    }
+    .brand{ display:flex; align-items:center; gap:12px }
+    .logo{
+      width:40px; height:40px; border-radius:12px; display:grid; place-items:center;
+      background:linear-gradient(135deg, var(--primary), var(--primary-2));
+      box-shadow: var(--shadow);
+    }
+    .brand h1{ font-size: clamp(18px, 3vw, 22px); margin:0; letter-spacing:.2px; }
+    .tagline{ color:var(--muted); font-size:14px }
+
+    /* Theme toggle (compact) */
+    .theme-toggle{
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid var(--border); background:var(--bg-soft);
+      border-radius:999px; padding:6px 10px; cursor:pointer; line-height:1;
+      font-size:13px; color:var(--text);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .theme-toggle:hover{ box-shadow: 0 0 0 3px var(--ring) }
+    .theme-toggle svg{ display:block }
+
+    .hero{
+      margin-top: 10px;
+      background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,0));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: clamp(18px, 4vw, 28px);
+      box-shadow: var(--shadow);
+    }
+    .hero h2{ font-size: clamp(22px, 4vw, 32px); margin:0 0 8px }
+    .hero p{ margin:0; color:var(--muted) }
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: clamp(16px, 3vw, 22px);
+      box-shadow: var(--shadow);
+    }
+    .grid{ display:grid; gap:18px; grid-template-columns: 1fr; }
+    @media (min-width: 980px){ .grid{ grid-template-columns: 1.1fr .9fr } }
+
+    .field{ display:grid; gap:8px; margin:12px 0; }
+    label{ font-size:14px; color:var(--muted) }
+    .input{
+      display:flex; align-items:center; gap:8px;
+      background: var(--bg-soft);
+      border:1px solid var(--border);
+      border-radius: 12px; padding: 12px 14px;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .input:focus-within{ border-color: var(--focus); box-shadow: 0 0 0 3px var(--ring) }
+    .input input, .input select{
+      background:transparent; border:0; outline:0; color:var(--text);
+      font-size:15px; width:100%;
+    }
+    .hint{ color:var(--muted); font-size:12.5px }
+
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px }
+    button{
+      appearance:none; border:0; cursor:pointer;
+      padding: 12px 16px; border-radius:12px; font-weight:600;
+      background: linear-gradient(180deg, var(--primary), var(--primary-2));
+      color:white; box-shadow: var(--shadow);
+      transition: transform .05s ease, filter .2s ease, box-shadow .2s ease, opacity .2s ease;
+    }
+    button.secondary{
+      background: transparent; color:var(--text);
+      border:1px solid var(--border);
+    }
+    button:active{ transform:translateY(1px) }
+    button[disabled]{ opacity:.6; cursor:not-allowed }
+
+    .endpoints{ display:grid; gap:12px; }
+    .endpoint{
+      display:grid; gap:6px; padding:12px; border:1px dashed var(--border); border-radius:12px; background: var(--bg-soft);
+    }
+    .endpoint code{
+      font-family:var(--mono); word-break:break-all; font-size:13.5px; line-height:1.4;
+      padding:8px 10px; border-radius:10px; background:var(--code-bg); display:block;
+    }
+    .endpoint .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .endpoint .label{ font-size:13px; color:var(--muted) }
+    .copy{
+      display:inline-flex; align-items:center; gap:8px; border:1px solid var(--border); border-radius:10px; background:transparent; padding:8px 10px;
+    }
+
+    pre.preview{
+      margin:0; padding:14px; background:var(--code-bg); color:inherit; border-radius:12px; border:1px solid var(--border);
+      max-height:400px; overflow:auto; font-family:var(--mono); font-size:13px; line-height:1.5;
+    }
+
+    .kicker{ display:flex; gap:16px; align-items:center; font-size:13px; color:var(--muted); margin-top:8px; flex-wrap:wrap }
+    .pill{ background:var(--bg-soft); border:1px solid var(--border); border-radius:999px; padding:6px 10px; }
+
+    footer{ color:var(--muted); font-size:13px; padding: 28px 0 40px; text-align:center }
+    .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0 }
+    .error { color: var(--danger); font-size: 13.5px; margin-top: 6px }
+    .ok    { color: var(--accent); font-size: 13.5px; margin-top: 6px }
+    .divider{ height:1px; background: var(--border); margin:14px 0 }
+  </style>
+</head>
+<body>
+  <a class="sr-only" href="#main">Skip to content</a>
+  <div class="container">
+    <header>
+      <div class="brand" aria-label="Brand">
+        <div class="logo" aria-hidden="true">
+          <!-- Inline SVG logo -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 3h10a2 2 0 0 1 2 2v2H7a2 2 0 0 0-2 2V3z" fill="white" opacity=".9"/>
+            <rect x="5" y="7" width="14" height="14" rx="2" fill="white" opacity=".25"/>
+            <path d="M8 11h8M8 15h8M8 19h5" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Sheets → JSON</h1>
+          <div class="tagline">Generate endpoints from a public Google Sheet & preview the JSON.</div>
+        </div>
+      </div>
+
+      <!-- Compact theme toggle -->
+      <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Toggle theme">
+        <span id="themeIcon" aria-hidden="true">
+          <!-- Moon (default) -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span id="themeText">Dark</span>
+      </button>
+    </header>
+
+    <main id="main" class="grid" aria-live="polite">
+      <!-- Left: Form -->
+      <section class="card" aria-label="Input">
+        <h2 style="margin:0 0 10px">Your Google Sheet</h2>
+
+        <form id="sheetForm" novalidate>
+          <div class="field">
+            <label for="sheetUrl">Google Sheet URL</label>
+            <div class="input">
+              <input id="sheetUrl" name="sheetUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/•••/edit#gid=0" inputmode="url" autocomplete="url" required aria-describedby="urlHint">
+            </div>
+            <div id="urlHint" class="hint">Make sure your sheet is shared as “Anyone with the link: Viewer”.</div>
+            <div id="urlError" class="error" role="alert" hidden></div>
+          </div>
+
+          <div class="field">
+            <label for="tabName">Tab (optional)</label>
+            <div class="input">
+              <input id="tabName" name="tabName" type="text" placeholder="e.g. Sheet1 (or leave blank)">
+            </div>
+            <div class="hint">If empty, some endpoints won’t include a tab segment.</div>
+          </div>
+
+          <div class="actions">
+            <button type="submit" id="buildBtn" aria-label="Build endpoints">Build endpoints</button>
+            <button type="button" class="secondary" id="previewBtn" disabled aria-label="Fetch preview">Fetch JSON preview</button>
+            <button type="reset" class="secondary" id="resetBtn">Reset</button>
+          </div>
+        </form>
+
+        <div class="kicker" aria-hidden="true">
+          <span class="pill">No API key</span>
+          <span class="pill">Copy & paste ready</span>
+          <span class="pill">Accessible UI</span>
+        </div>
+      </section>
+
+      <!-- Right: Hero + Preview -->
+      <section class="hero" aria-label="About">
+        <h2>Instant endpoints. Zero setup.</h2>
+        <p>Paste your public Google Sheet link, optionally add a tab name, then copy the endpoints below. Use the preview to confirm your data looks right.</p>
+        <div class="divider"></div>
+        <h3 style="margin:0 0 6px;font-size:16px">Quick tips</h3>
+        <ul style="margin:0 0 8px 18px; padding:0; color:var(--muted); font-size:14px">
+          <li>Share your sheet: <em>File → Share → Anyone with the link: Viewer</em>.</li>
+          <li>Tab names are case-sensitive; avoid special characters if possible.</li>
+          <li>Large sheets? Prefer CSV/TSV to reduce payload size.</li>
+        </ul>
+      </section>
+    </main>
+
+    <!-- Endpoints -->
+    <section class="card" aria-label="Endpoints" style="margin-top:18px">
+      <h2 style="margin:0 0 10px">Your endpoints</h2>
+      <div id="endpoints" class="endpoints" aria-live="polite">
+        <div class="hint">Fill the form and click <strong>Build endpoints</strong>.</div>
+      </div>
+    </section>
+
+    <!-- Preview -->
+    <section class="card" aria-label="JSON Preview" style="margin-top:18px">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+        <h2 style="margin:0">Live JSON preview</h2>
+        <div class="hint">We fetch the GViz JSON and convert it for readability.</div>
+      </div>
+      <div id="previewStatus" class="hint" role="status" style="margin:8px 0 10px"></div>
+      <pre id="preview" class="preview" aria-label="Preview area">{ /* Build endpoints, then click “Fetch JSON preview” */ }</pre>
+    </section>
+
+    <footer>
+      Built with ❤️ — works entirely in your browser.
+    </footer>
+  </div>
+
+  <script>
+    /* ===== Theme persistence (cookie) ===== */
+    const THEME_COOKIE = "sheetsjson_theme";
+    const COOKIE_MAX_AGE = 60 * 60 * 24 * 400; // ~400 days
+
+    function setCookie(name, value, maxAgeSeconds){
+      document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`;
+    }
+    function getCookie(name){
+      return document.cookie.split("; ").find(c => c.startsWith(name + "="))?.split("=")[1] || null;
+    }
+
+    function applyTheme(theme){
+      const html = document.documentElement;
+      if(theme !== "light" && theme !== "dark"){ theme = "dark"; }
+      html.setAttribute("data-theme", theme);
+      // Update button UI
+      const pressed = (theme === "light");
+      const btn = document.getElementById("themeToggle");
+      const txt = document.getElementById("themeText");
+      const iconWrap = document.getElementById("themeIcon");
+      btn.setAttribute("aria-pressed", String(pressed));
+      txt.textContent = theme === "light" ? "Light" : "Dark";
+      iconWrap.innerHTML = theme === "light"
+        // Sun icon
+        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+             <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/>
+             <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+               stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+           </svg>`
+        // Moon icon
+        : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+               stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+           </svg>`;
+      // Update meta theme-color to match background for nicer mobile address bar
+      const meta = document.getElementById("themeColor");
+      meta.setAttribute("content", getComputedStyle(document.documentElement).getPropertyValue("--theme-color").trim());
+    }
+
+    // Initialize theme: default dark unless cookie says otherwise
+    (function initTheme(){
+      const stored = getCookie(THEME_COOKIE);
+      const initial = stored ? decodeURIComponent(stored) : "dark";
+      applyTheme(initial);
+    })();
+
+    document.getElementById("themeToggle").addEventListener("click", ()=>{
+      const current = document.documentElement.getAttribute("data-theme") || "dark";
+      const next = current === "dark" ? "light" : "dark";
+      applyTheme(next);
+      setCookie(THEME_COOKIE, next, COOKIE_MAX_AGE);
+    });
+
+    /* ===== App logic from previous version ===== */
+    function parseSheetUrl(url){
+      try{
+        const u = new URL(url.trim());
+        if(!/docs\.google\.com$/.test(u.hostname)) return { error: "That doesn't look like a Google Sheets link." };
+        const m = u.pathname.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if(!m) return { error: "Could not find a spreadsheet ID in the URL." };
+        const id = m[1];
+        const gid = u.searchParams.get("gid") || (u.hash.match(/gid=(\d+)/)?.[1] ?? "");
+        return { id, gid };
+      }catch(e){
+        return { error: "Please enter a valid Google Sheets URL." };
+      }
+    }
+
+    function buildEndpoints({id, tab, gid}){
+      const gviz = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json${gid ? "&gid="+gid : ""}`;
+      const csv = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv${gid ? "&gid="+gid : ""}`;
+      const tsv = `https://docs.google.com/spreadsheets/d/${id}/export?format=tsv${gid ? "&gid="+gid : ""}`;
+      const label = tab ? encodeURIComponent(tab) : "Sheet";
+      return [
+        {label:"GViz JSON (Google)", url: gviz, doc:"Best for quick previews; returns JSON-like data you may need to parse."},
+        {label:"CSV (export)", url: csv, doc:"Good for lightweight fetches and converting in your app."},
+        {label:"TSV (export)", url: tsv, doc:"Alternative to CSV; useful if your data contains commas."},
+        {label:"Snippet: CSV → JSON (client)", url:`fetch('${csv}').then(r=>r.text()).then(csv=>csvToJson(csv)) // ${label}`, doc:"Use in your codebase; convert CSV to JSON client-side."}
+      ];
+    }
+
+    function csvToJson(csv){
+      const lines = csv.replace(/\r/g,'').split('\n').filter(Boolean);
+      if(lines.length === 0) return [];
+      const headers = lines[0].split(',');
+      return lines.slice(1).map(line=>{
+        const cells = line.split(',');
+        const obj = {};
+        headers.forEach((h,i)=> obj[h.trim()] = (cells[i] ?? "").trim());
+        return obj;
       });
-    </script>
-  </body>
+    }
+
+    function parseGvizJSON(text){
+      const m = text.match(/setResponse\(([\s\S]*?)\);?$/);
+      if(!m) return { raw: text };
+      const obj = JSON.parse(m[1]);
+      if(obj?.table?.cols && obj?.table?.rows){
+        const headers = obj.table.cols.map(c => c.label || c.id || "col");
+        const rows = obj.table.rows.map(r=>{
+          const o = {};
+          r.c?.forEach((cell, i)=>{
+            o[headers[i] || `col${i+1}`] = cell?.v ?? null;
+          });
+          return o;
+        });
+        return { rows, headers, source: "gviz" };
+      }
+      return obj;
+    }
+
+    const sheetUrlEl   = document.getElementById('sheetUrl');
+    const tabNameEl    = document.getElementById('tabName');
+    const endpointsEl  = document.getElementById('endpoints');
+    const urlErrorEl   = document.getElementById('urlError');
+    const buildBtn     = document.getElementById('buildBtn');
+    const previewBtn   = document.getElementById('previewBtn');
+    const previewEl    = document.getElementById('preview');
+    const statusEl     = document.getElementById('previewStatus');
+    const formEl       = document.getElementById('sheetForm');
+
+    function renderEndpoints(list){
+      if(!list || list.length === 0){
+        endpointsEl.innerHTML = '<div class="hint">No endpoints yet.</div>';
+        return;
+      }
+      endpointsEl.innerHTML = '';
+      list.forEach(item=>{
+        const block = document.createElement('div');
+        block.className = 'endpoint';
+        block.innerHTML = `
+          <div class="row">
+            <div class="label">${item.label}</div>
+            <button class="copy" type="button" aria-label="Copy endpoint">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="9" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/>
+                <rect x="5" y="5" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.6" opacity=".7"/>
+              </svg>
+              Copy
+            </button>
+          </div>
+          <code>${item.url.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>
+          <div class="hint">${item.doc}</div>
+        `;
+        const btn = block.querySelector('.copy');
+        btn.addEventListener('click', async ()=>{
+          try{
+            await navigator.clipboard.writeText(item.url);
+            btn.textContent = 'Copied!';
+            setTimeout(()=> btn.innerHTML = `
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="9" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/>
+                <rect x="5" y="5" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.6" opacity=".7"/>
+              </svg>
+              Copy
+            `, 1200);
+          }catch(e){ alert('Copy failed. You can select the URL and copy manually.'); }
+        });
+        endpointsEl.appendChild(block);
+      });
+    }
+
+    function setError(msg){
+      urlErrorEl.textContent = msg;
+      urlErrorEl.hidden = !msg;
+    }
+
+    function setPreviewStatus(msg, ok=false){
+      statusEl.textContent = msg || '';
+      statusEl.className = ok ? 'ok' : 'hint';
+    }
+
+    formEl.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      setError('');
+      const raw = sheetUrlEl.value.trim();
+      const {id, gid, error} = parseSheetUrl(raw);
+      if(error){ setError(error); renderEndpoints(); previewBtn.disabled = true; return; }
+      const tab = tabNameEl.value.trim();
+      const list = buildEndpoints({id, tab, gid});
+      renderEndpoints(list);
+      previewBtn.disabled = false;
+      setPreviewStatus('Endpoints ready. You can fetch a preview now.', true);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', ()=>{
+      renderEndpoints([]);
+      previewBtn.disabled = true;
+      previewEl.textContent = '{ /* Build endpoints, then click “Fetch JSON preview” */ }';
+      setPreviewStatus('');
+      setError('');
+    });
+
+    document.getElementById('previewBtn').addEventListener('click', async ()=>{
+      setPreviewStatus('Fetching preview...', false);
+      const raw = sheetUrlEl.value.trim();
+      const {id, gid, error} = parseSheetUrl(raw);
+      if(error){ setError(error); return }
+      const gviz = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json${gid ? "&gid="+gid : ""}`;
+      try{
+        const res = await fetch(gviz, { mode: 'cors' });
+        const text = await res.text();
+        const parsed = parseGvizJSON(text);
+        const pretty = JSON.stringify(parsed?.rows ?? parsed, null, 2);
+        previewEl.textContent = pretty.length > 2 ? pretty : text.slice(0, 4000);
+        setPreviewStatus('Preview loaded.', true);
+      }catch(err){
+        previewEl.textContent = `// We couldn’t fetch due to browser/CORS settings.\n// You can open the GViz URL directly in a new tab and inspect the JSON:\n${gviz}`;
+        setPreviewStatus('Could not fetch via CORS. Link provided instead.', false);
+      }
+    });
+
+    sheetUrlEl.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('buildBtn').click(); }
+    });
+  </script>
+</body>
 </html>
