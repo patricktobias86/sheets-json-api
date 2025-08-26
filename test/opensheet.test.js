@@ -4,6 +4,8 @@ import handler from '../netlify/edge-functions/opensheet.js';
 
 const context = { waitUntil: () => {} };
 
+process.env.GOOGLE_API_KEY = 'FAKE_KEY';
+
 test('returns rows from Google Sheet', async () => {
   globalThis.caches = {
     default: {
@@ -16,11 +18,16 @@ test('returns rows from Google Sheet', async () => {
     },
   };
 
-  const req = new Request('https://example.com/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y/1');
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ values: [["name"], ["Ada"]] }));
+
+  const req = new Request('https://example.com/test-sheet/Sheet1');
   const res = await handler(req, context);
   const data = await res.json();
-  assert(Array.isArray(data));
-  assert.ok(data.length > 0);
+  assert.deepStrictEqual(data, [{ name: 'Ada' }]);
+
+  globalThis.fetch = originalFetch;
 });
 
 test('redirects to first sheet when sheet is missing', async () => {

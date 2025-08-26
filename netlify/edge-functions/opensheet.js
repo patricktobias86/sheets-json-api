@@ -3,8 +3,7 @@
 export default async function handler(request, context) {
   const GOOGLE_API_KEY =
     (globalThis.process?.env?.GOOGLE_API_KEY ??
-      globalThis.Deno?.env?.get("GOOGLE_API_KEY"))?.trim() ||
-    "AIzaSyC6y93Jo0fA1GH54L7VOkJzgZkiaXSSOOU";
+      globalThis.Deno?.env?.get("GOOGLE_API_KEY"))?.trim();
   if (!GOOGLE_API_KEY) {
     return error("Missing GOOGLE_API_KEY environment variable", 500);
   }
