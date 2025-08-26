@@ -2,7 +2,8 @@
 
 An API that converts Google Sheets into JSON, served via a Netlify Edge Function.
 
-Visiting the root URL shows a form where you can paste a Google Sheets link. The form rewrites the link to a valid API URL and redirects you there.
+Visiting the root URL shows a form where you can paste a Google Sheets link. The
+form rewrites the link to a valid API URL and redirects you there.
 
 ## Usage
 
@@ -27,9 +28,9 @@ The Edge Function lives in `netlify/edge-functions/opensheet.js`.
 
 ### Environment variables
 
-The function looks for a `GOOGLE_API_KEY` value using `process.env` in Node or
-`Deno.env.get` in Netlify's Edge runtime. When the variable is absent, a default
-API key is used.
+The function requires a `GOOGLE_API_KEY` value using `process.env` in Node or
+`Deno.env.get` in Netlify's Edge runtime. If the variable is missing, the
+function responds with an error.
 
 ### Caching
 
@@ -43,7 +44,9 @@ returns live data.
 npm test
 ```
 
-Tests fetch a sample spreadsheet and verify rows are returned, ensure the deployed API returns `[{"headline":"It's working!"}]`, and confirm that requests missing a sheet segment redirect to the first sheet.
+Tests mock Google Sheets responses to verify rows are returned, ensure the
+deployed API returns `[{"headline":"It's working!"}]`, and confirm that
+requests missing a sheet segment redirect to the first sheet.
 
 ### Continuous integration
 
