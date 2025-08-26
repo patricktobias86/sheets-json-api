@@ -1,4 +1,6 @@
-# google-sheets-api
+# Google Sheets > JSON API
+
+<img width="2048" height="1612" alt="sheets-json-api netlify app_(Nest Hub)" src="https://github.com/user-attachments/assets/c85faebb-1f51-4442-96ba-8c70113dacf0" />
 
 An API that converts Google Sheets into JSON, served via a Netlify Edge Function.
 
