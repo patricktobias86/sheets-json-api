@@ -2,10 +2,13 @@
 
 <img width="2048" height="1612" alt="sheets-json-api netlify app_(Nest Hub)" src="https://github.com/user-attachments/assets/c85faebb-1f51-4442-96ba-8c70113dacf0" />
 
-An API that converts Google Sheets into JSON, served by a regular JavaScript function (currently hosted on Coolift).
+An API that converts Google Sheets into JSON, served by a regular JavaScript function (currently hosted on Coolify (self-hosted)).
 
 Visiting the root URL shows a form where you can paste a Google Sheets link. The
 form rewrites the link to a valid API URL and redirects you there.
+
+The root page serves `public/index.html` (with `/favicon.ico`), and the server
+also exposes a simple `robots.txt` that allows all crawlers.
 
 ## Usage
 
@@ -66,6 +69,6 @@ Pull requests to `main` run `npm test` via GitHub Actions.
 
 ## Deployment
 
-This project is currently hosted on Coolift. Static assets are served from
+This project is currently hosted on Coolify (self-hosted). Static assets are served from
 `public`, and incoming requests are handled by the function in
 `functions/opensheet.js`.

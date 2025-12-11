@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-- Hosted on Coolift.
+- Hosted on Coolify (self-hosted).
 - Install new packages when needed.
 - JSON files use two-space indentation.
 - `public` should contain all public assets.
