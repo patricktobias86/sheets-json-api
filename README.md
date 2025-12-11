@@ -2,7 +2,7 @@
 
 <img width="2048" height="1612" alt="sheets-json-api netlify app_(Nest Hub)" src="https://github.com/user-attachments/assets/c85faebb-1f51-4442-96ba-8c70113dacf0" />
 
-An API that converts Google Sheets into JSON, served via a Netlify Edge Function.
+An API that converts Google Sheets into JSON, served by a regular JavaScript function (currently hosted on Coolift).
 
 Visiting the root URL shows a form where you can paste a Google Sheets link. The
 form rewrites the link to a valid API URL and redirects you there.
@@ -15,30 +15,30 @@ segment is omitted, the request will redirect to the first sheet (`/1`).
 Example:
 
 ```
-https://sheets-json-api.netlify.app/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y
+https://sheet.primehostingdev.xyz/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y
 ```
 
 This redirects to:
 
 ```
-https://sheets-json-api.netlify.app/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y/1
+https://sheet.primehostingdev.xyz/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y/1
 ```
 
 ## Development
 
-The Edge Function lives in `netlify/edge-functions/opensheet.js`.
+The main request handler lives in `functions/opensheet.js`. It is a regular
+JavaScript function that can run in any compatible runtime.
 
 ### Environment variables
 
 The function requires a `GOOGLE_API_KEY` value using `process.env` in Node or
-`Deno.env.get` in Netlify's Edge runtime. If the variable is missing, the
-function responds with an error.
+`Deno.env.get`. If the variable is missing, the function responds with an error.
 
 ### Caching
 
-Responses are cached for 30 seconds using the Edge Cache API when available. If
-the runtime does not support the cache API, the function skips caching but still
-returns live data.
+Responses are cached for 30 seconds when a cache API is available (for example,
+in edge runtimes that expose `caches.default`). If the runtime does not support
+the cache API, the function skips caching but still returns live data.
 
 ### Running tests
 
@@ -56,4 +56,6 @@ Pull requests to `main` run `npm test` via GitHub Actions.
 
 ## Deployment
 
-Netlify builds read `netlify.toml` and publish files from `public`.
+This project is currently hosted on Coolift. Static assets are served from
+`public`, and incoming requests are handled by the function in
+`functions/opensheet.js`.

@@ -1,0 +1,21 @@
+{
+  "version": "1.0",
+  "name": "sheets-json-api",
+  "build": {
+    "type": "nixpacks",
+    "install_command": "npm install",
+    "build_command": "",
+    "start_command": "node functions/opensheet.js"
+  },
+  "domains": {
+    "ports_exposes": "3000"
+  },
+  "environment_variables": {
+    "production": [
+      {
+        "key": "GOOGLE_API_KEY",
+        "value": "SERVICE_GOOGLE_API_KEY"
+      }
+    ]
+  }
+}

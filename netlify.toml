@@ -1,7 +1,0 @@
-# Route all paths to the Edge Function
-[[edge_functions]]
-function = "opensheet"
-path = "/*"
-
-[build]
-publish = "public"

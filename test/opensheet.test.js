@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import handler from '../netlify/edge-functions/opensheet.js';
+import handler from '../functions/opensheet.js';
 
 const context = { waitUntil: () => {} };
 

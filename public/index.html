@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Sheets → JSON URL (One-Click)</title>
-  <link rel="canonical" href="https://sheets-json-api.netlify.app/"/>
+  <link rel="canonical" href="https://sheet.primehostingdev.xyz/"/>
 
   <!-- Primary Meta Tags -->
   <title>Google Sheets → JSON API (One-Click)</title>
@@ -14,17 +14,17 @@
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://sheets-json-api.netlify.app/" />
+  <meta property="og:url" content="https://sheet.primehostingdev.xyz/" />
   <meta property="og:title" content="Google Sheets → JSON API (One-Click)" />
   <meta property="og:description" content="Convert any Google Sheets into a JSON API URL and preview the data instantly." />
-  <meta property="og:image" content="https://sheets-json-api.netlify.app/image.jpg" />
+  <meta property="og:image" content="https://sheet.primehostingdev.xyz/image.jpg" />
 
   <!-- X (Twitter) -->
   <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content="https://sheets-json-api.netlify.app/" />
+  <meta property="twitter:url" content="https://sheet.primehostingdev.xyz/" />
   <meta property="twitter:title" content="Google Sheets → JSON API (One-Click)" />
   <meta property="twitter:description" content="Convert any Google Sheets into a JSON API URL and preview the data instantly." />
-  <meta property="twitter:image" content="https://sheets-json-api.netlify.app/image.jpg" />
+  <meta property="twitter:image" content="https://sheet.primehostingdev.xyz/image.jpg" />
 
   <!-- Color schemes -->
   <meta name="color-scheme" content="dark light" />
@@ -44,7 +44,7 @@
       {
         "@type":"Question",
         "name":"What URL format does it output?",
-        "acceptedAnswer":{"@type":"Answer","text":"https://sheets-json-api.netlify.app/{sheetId}/{tabIndex} — you can copy it directly."}
+        "acceptedAnswer":{"@type":"Answer","text":"https://sheet.primehostingdev.xyz/{sheetId}/{tabIndex} — you can copy it directly."}
       },
       {
         "@type":"Question",
@@ -227,7 +227,7 @@
       <!-- Right: About -->
       <section class="hero" aria-label="About">
         <h2>Clean URL, instant preview</h2>
-        <p>We output exactly <code>https://sheets-json-api.netlify.app/{sheetId}/{tabIndex}</code>. The preview uses the <code>gid</code> from your pasted URL to show real data.</p>
+        <p>We output exactly <code>https://sheet.primehostingdev.xyz/{sheetId}/{tabIndex}</code>. The preview uses the <code>gid</code> from your pasted URL to show real data.</p>
       </section>
     </main>
 
@@ -335,7 +335,7 @@
 
     function buildApiUrl({id, index}){
       const idx = Math.max(1, Number(index) || 1);
-      return `https://sheets-json-api.netlify.app/${id}/${idx}`;
+      return `https://sheet.primehostingdev.xyz/${id}/${idx}`;
     }
 
     function renderApiUrl(url){
@@ -351,7 +351,7 @@
           </button>
         </div>
         <code>${url.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>
-        <div class="hint">Format: https://sheets-json-api.netlify.app/{sheetId}/{tabIndex}</div>
+        <div class="hint">Format: https://sheet.primehostingdev.xyz/{sheetId}/{tabIndex}</div>
       `;
       apiBoxEl.querySelector('.copy').addEventListener('click', async (e)=>{
         try{

@@ -31,8 +31,8 @@ export default async function handler(request, context) {
     return error("URL format is /spreadsheet_id/sheet_name", 404);
   }
 
-  // Try cache first (Edge Cache API)
-  const cacheKey = `https://sheets-json-api.netlify.app/${id}/${encodeURIComponent(sheet)}`;
+  // Try cache first (if cache API is available)
+  const cacheKey = `${url.origin}/${id}/${encodeURIComponent(sheet)}`;
   const cache = globalThis.caches?.default;
   if (cache) {
     const cachedResponse = await cache.match(cacheKey);
