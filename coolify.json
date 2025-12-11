@@ -5,7 +5,7 @@
     "type": "nixpacks",
     "install_command": "npm install",
     "build_command": "",
-    "start_command": "node functions/opensheet.js"
+    "start_command": "npm start"
   },
   "domains": {
     "ports_exposes": "3000"

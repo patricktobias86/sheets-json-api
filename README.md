@@ -29,6 +29,16 @@ https://sheet.primehostingdev.xyz/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y/1
 The main request handler lives in `functions/opensheet.js`. It is a regular
 JavaScript function that can run in any compatible runtime.
 
+For local development, run:
+
+```sh
+npm start
+```
+
+This starts a small Node server from `server.js` that serves `public/index.html`
+at the root URL and forwards API requests to the handler in
+`functions/opensheet.js`.
+
 ### Environment variables
 
 The function requires a `GOOGLE_API_KEY` value using `process.env` in Node or
