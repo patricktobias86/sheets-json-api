@@ -1,5 +1,3 @@
-// netlify/edge-functions/opensheet.js
-
 export default async function handler(request, context) {
   const GOOGLE_API_KEY =
     (globalThis.process?.env?.GOOGLE_API_KEY ??

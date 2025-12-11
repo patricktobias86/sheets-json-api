@@ -96,6 +96,10 @@ const server = http.createServer(async (req, res) => {
 
     const response = await handler(request, context);
 
+    console.log(
+      `[request] ${req.method || "UNKNOWN"} ${url.pathname} -> ${response.status}`
+    );
+
     res.statusCode = response.status;
     response.headers.forEach((value, key) => {
       res.setHeader(key, value);
@@ -116,4 +120,3 @@ const server = http.createServer(async (req, res) => {
 server.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`);
 });
-
