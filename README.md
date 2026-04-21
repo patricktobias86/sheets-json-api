@@ -81,6 +81,8 @@ requests missing a sheet segment redirect to the first sheet.
 ### Continuous integration
 
 Pull requests to `main` run `npm test` via GitHub Actions.
+Dependabot checks npm packages and GitHub Actions weekly and opens pull
+requests for available updates.
 
 ## Deployment
 

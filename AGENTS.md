@@ -10,4 +10,5 @@
 - Keep README and AGENTS.md updated when changes are made
 - Sensitive values like API keys must come from environment variables; do not commit secrets.
 - Pull requests to `main` run `npm test` via GitHub Actions.
+- Dependabot checks npm packages and GitHub Actions weekly.
 - Tests are located in `test` and run with `npm test`.
