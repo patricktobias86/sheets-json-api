@@ -46,6 +46,21 @@ at the root URL and forwards API requests to the handler in
 
 The function requires a `GOOGLE_API_KEY` value using `process.env` in Node or
 `Deno.env.get`. If the variable is missing, the function responds with an error.
+Copy `.env.example` to `.env` for local Docker Compose usage, or export the
+variables in your shell before starting the app.
+
+### Docker Compose
+
+Build and run the app locally with Docker Compose:
+
+```sh
+cp .env.example .env
+docker compose up --build
+```
+
+The Compose service publishes the app at `http://localhost:3000` by default.
+Set `PORT` to change the host port, and set `GOOGLE_API_KEY` in the environment
+or `.env` file for API requests.
 
 ### Caching
 
@@ -71,4 +86,6 @@ Pull requests to `main` run `npm test` via GitHub Actions.
 
 This project is currently hosted on Coolify (self-hosted). Static assets are served from
 `public`, and incoming requests are handled by the function in
-`functions/opensheet.js`.
+`functions/opensheet.js`. The included `Dockerfile` and `compose.yml` can be
+used by container-based deployments; configure `GOOGLE_API_KEY` as an
+environment variable in the hosting platform.

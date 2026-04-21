@@ -1,6 +1,7 @@
 # Repository Guidelines
 
 - Hosted on Coolify (self-hosted).
+- Docker Compose support lives in `compose.yml`; the container image is built from `Dockerfile`.
 - Install new packages when needed.
 - JSON files use two-space indentation.
 - `public` should contain all public assets.

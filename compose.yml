@@ -1,0 +1,11 @@
+services:
+  sheets-json-api:
+    build:
+      context: .
+    image: sheets-json-api:local
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      PORT: 3000
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+    restart: unless-stopped
