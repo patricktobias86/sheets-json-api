@@ -55,12 +55,12 @@ Build and run the app locally with Docker Compose:
 
 ```sh
 cp .env.example .env
-docker compose up --build
+docker compose -f compose.yml -f compose.local.yml up --build
 ```
 
-The Compose service publishes the app at `http://localhost:3000` by default.
-Set `PORT` to change the host port, and set `GOOGLE_API_KEY` in the environment
-or `.env` file for API requests.
+The local override publishes the app at `http://localhost:3000` by default.
+Set `PORT` to change the local host port, and set `GOOGLE_API_KEY` in the
+environment or `.env` file for API requests.
 
 ### Caching
 
@@ -88,4 +88,6 @@ This project is currently hosted on Coolify (self-hosted). Static assets are ser
 `public`, and incoming requests are handled by the function in
 `functions/opensheet.js`. The included `Dockerfile` and `compose.yml` can be
 used by container-based deployments; configure `GOOGLE_API_KEY` as an
-environment variable in the hosting platform.
+environment variable in the hosting platform. The production Compose file uses
+`expose` instead of a host `ports` binding so Coolify can route traffic through
+its proxy without requiring host port `3000` to be free.
