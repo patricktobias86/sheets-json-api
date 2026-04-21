@@ -11,6 +11,11 @@ fetches a live JSON preview from the same API endpoint.
 The root page serves `public/index.html` (with `/favicon.ico`), and the server
 also exposes a simple `robots.txt` that allows all crawlers.
 
+The landing page keeps its small design system in the embedded stylesheet in
+`public/index.html`: shared color, spacing, type, radius, and shadow tokens live
+in `:root`, with reusable classes for section spacing, headings, focus states,
+and generated output.
+
 ## Usage
 
 Requests follow the pattern `/SPREADSHEET_ID/sheet_name_or_number`. If the sheet

@@ -6,6 +6,8 @@
 - Install new packages when needed.
 - JSON files use two-space indentation.
 - `public` should contain all public assets.
+- Keep landing page UI styles in `public/index.html` aligned with the existing
+  design tokens and reusable classes before adding new one-off styles.
 - Functions are in `functions`.
 - Keep README and AGENTS.md updated when changes are made
 - Sensitive values like API keys must come from environment variables; do not commit secrets.
