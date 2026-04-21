@@ -19,6 +19,6 @@
     "test": "node --test"
   },
   "dependencies": {
-    "dotenv": "^17.2.1"
+    "dotenv": "^17.4.2"
   }
 }
