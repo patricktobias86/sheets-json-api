@@ -339,6 +339,46 @@
       return `https://sheet.primehostingdev.xyz/${id}/${idx}`;
     }
 
+    async function copyText(text){
+      if(navigator.clipboard?.writeText){
+        try{
+          await navigator.clipboard.writeText(text);
+          return true;
+        }catch(err){
+          // Fall through to the selection-based copy for restricted contexts.
+        }
+      }
+
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-1000px';
+      textarea.style.left = '-1000px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+
+      try{
+        return typeof document.execCommand === 'function' && document.execCommand('copy');
+      }catch(err){
+        return false;
+      }finally{
+        document.body.removeChild(textarea);
+      }
+    }
+
+    function setCopyButtonState(button, label){
+      button.textContent = label;
+      setTimeout(()=> button.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="9" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/>
+          <rect x="5" y="5" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.6" opacity=".7"/>
+        </svg>
+        Copy
+      `, 1200);
+    }
+
     function renderApiUrl(url){
       apiBoxEl.innerHTML = `
         <div class="rowFlex">
@@ -355,36 +395,14 @@
         <div class="hint">Format: https://sheet.primehostingdev.xyz/{sheetId}/{tabIndex}</div>
       `;
       apiBoxEl.querySelector('.copy').addEventListener('click', async (e)=>{
-        try{
-          await navigator.clipboard.writeText(url);
-          e.currentTarget.textContent = 'Copied!';
-          setTimeout(()=> e.currentTarget.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <rect x="9" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/>
-              <rect x="5" y="5" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.6" opacity=".7"/>
-            </svg>
-            Copy
-          `, 1200);
-        }catch(err){ alert('Copy failed. You can select the URL and copy manually.'); }
+        const copied = await copyText(url);
+        if(copied){
+          setCopyButtonState(e.currentTarget, 'Copied!');
+        }else{
+          setCopyButtonState(e.currentTarget, 'Select URL');
+          alert('Copy failed. You can select the URL and copy manually.');
+        }
       });
-    }
-
-    function parseGvizJSON(text){
-      const m = text.match(/setResponse\(([\s\S]*?)\);?$/);
-      if(!m) return { raw: text };
-      const obj = JSON.parse(m[1]);
-      if(obj?.table?.cols && obj?.table?.rows){
-        const headers = obj.table.cols.map(c => c.label || c.id || "col");
-        const rows = obj.table.rows.map(r=>{
-          const o = {};
-          r.c?.forEach((cell, i)=>{
-            o[headers[i] || `col${i+1}`] = cell?.v ?? null;
-          });
-          return o;
-        });
-        return { rows, headers, source: "gviz" };
-      }
-      return obj;
     }
 
     formEl.addEventListener('submit', (e)=>{
@@ -398,10 +416,9 @@
       const idx = (tabIndexEl.value || '').trim() || '1';
       renderApiUrl(buildApiUrl({id, index: idx}));
 
-      // Enable preview button if gid is present
-      previewBtn.disabled = !gid;
+      previewBtn.disabled = false;
       if(!gid){
-        setPreviewStatus('No gid found in the URL; open your desired tab in Google Sheets and copy that URL.', false);
+        setPreviewStatus('API URL ready. You can fetch a preview now.', true);
       }else{
         setPreviewStatus('API URL ready. You can fetch a preview now.', true);
         // try to hint which tab user copied (we can't know the index, but we can surface gid)
@@ -421,23 +438,23 @@
     document.getElementById('previewBtn').addEventListener('click', async ()=>{
       setPreviewStatus('Fetching preview...', false);
       const raw = sheetUrlEl.value.trim();
-      const {id, gid, error} = parseSheetUrl(raw);
+      const {id, error} = parseSheetUrl(raw);
       if(error){ setError(error); return }
-      if(!gid){
-        setPreviewStatus('No gid present in the URL. Open the tab you want in Google Sheets (so the URL shows gid=…) then paste it here.', false);
-        return;
-      }
-      const gviz = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&gid=${gid}`;
+      const idx = (tabIndexEl.value || '').trim() || '1';
+      const apiUrl = buildApiUrl({id, index: idx});
       try{
-        const res = await fetch(gviz, { mode: 'cors' });
-        const text = await res.text();
-        const parsed = parseGvizJSON(text);
-        const pretty = JSON.stringify(parsed?.rows ?? parsed, null, 2);
-        previewEl.textContent = pretty.length > 2 ? pretty : text.slice(0, 4000);
+        const res = await fetch(apiUrl, { mode: 'cors' });
+        const data = await res.json();
+        const pretty = JSON.stringify(data, null, 2);
+        previewEl.textContent = pretty.length > 2 ? pretty : '[]';
+        if(!res.ok){
+          setPreviewStatus(`Preview returned HTTP ${res.status}.`, false);
+          return;
+        }
         setPreviewStatus('Preview loaded.', true);
       }catch(err){
-        previewEl.textContent = `// Could not fetch due to browser/CORS settings.\n// Open this GViz URL in a new tab and inspect the JSON:\n${gviz}`;
-        setPreviewStatus('Could not fetch via CORS. Link provided instead.', false);
+        previewEl.textContent = `// Could not fetch the API preview.\n// Open this API URL in a new tab and inspect the JSON:\n${apiUrl}`;
+        setPreviewStatus('Could not fetch the API preview. Link provided instead.', false);
       }
     });
 

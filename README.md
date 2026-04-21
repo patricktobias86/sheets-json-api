@@ -5,7 +5,8 @@
 An API that converts Google Sheets into JSON, served by a regular JavaScript function (currently hosted on Coolify (self-hosted)).
 
 Visiting the root URL shows a form where you can paste a Google Sheets link. The
-form rewrites the link to a valid API URL and redirects you there.
+form rewrites the link to a valid API URL, lets you copy it from the page, and
+fetches a live JSON preview from the same API endpoint.
 
 The root page serves `public/index.html` (with `/favicon.ico`), and the server
 also exposes a simple `robots.txt` that allows all crawlers.
