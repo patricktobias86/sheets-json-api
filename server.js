@@ -104,7 +104,7 @@ const server = http.createServer(async (req, res) => {
     const response = await handler(request, context);
 
     console.log(
-      `[request] ${req.method || "UNKNOWN"} ${url.pathname} -> ${response.status}`
+      `${context.servedFromCache ? "Cache: " : ""}[request] ${req.method || "UNKNOWN"} ${url.pathname} -> ${response.status}`
     );
 
     res.statusCode = response.status;

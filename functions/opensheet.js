@@ -73,7 +73,7 @@ export default async function handler(request, context) {
 
   const cachedValues = localGet(localCacheKey);
   if (cachedValues !== undefined) {
-    console.log(`Serving from local cache: ${localCacheKey}`);
+    context.servedFromCache = true;
     return serialize(buildRows(slice(cachedValues, parsed)));
   }
 
@@ -83,10 +83,9 @@ export default async function handler(request, context) {
     const cacheKey = `${url.origin}/${id}/${encodeURIComponent(sheet)}`;
     const cachedResponse = await cache.match(cacheKey);
     if (cachedResponse) {
-      console.log(`Serving from cache: ${cacheKey}`);
+      context.servedFromCache = true;
       return cachedResponse;
     }
-    console.log(`Cache miss: ${cacheKey}`);
   }
 
   const valuesRes = await fetch(
