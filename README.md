@@ -24,13 +24,13 @@ segment is omitted, the request will redirect to the first sheet (`/1`).
 Example:
 
 ```
-https://sheet.primehostingdev.xyz/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y
+https://sheet.primehosting.dev/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y
 ```
 
 This redirects to:
 
 ```
-https://sheet.primehostingdev.xyz/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y/1
+https://sheet.primehosting.dev/1vufOODlks7O9PGak54hMNP4LWBUAoP-XB9n3VW_aw5Y/1
 ```
 
 ## Development
