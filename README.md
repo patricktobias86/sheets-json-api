@@ -71,7 +71,7 @@ environment or `.env` file for API requests.
 ### Caching
 
 The function keeps a short-lived local, in-memory cache of spreadsheets so that
-requests for the same spreadsheet within 30 seconds of the previous request are
+requests for the same spreadsheet within 60 seconds of the previous request are
 served without hitting the Google Sheets API again. It stores both the
 spreadsheet document metadata (keyed by spreadsheet ID, used to resolve sheet
 numbers) and the full contents of each requested sheet. This cache lives in the
@@ -82,11 +82,11 @@ Because the cache is keyed by the spreadsheet ID and sheet *name* (not the full
 range), different ranges of the same sheet are treated as the same type of
 request: once one range (e.g. `Sheet1!A:B`) has been fetched, any other range
 of that sheet (e.g. `Sheet1!A:C`) is served from the same cached copy until the
-30-second window expires. `Cache-Control: s-maxage=30` is set on responses.
+60-second window expires. `Cache-Control: s-maxage=60` is set on responses.
 
 When an edge Cache API is available (for example, runtimes that expose
 `caches.default`), exact per-range responses are also cached for the same
-30-second window. If neither the local memory cache nor the cache API has a
+60-second window. If neither the local memory cache nor the cache API has a
 fresh entry, the function fetches live data and stores it before responding.
 
 ### Running tests

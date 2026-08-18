@@ -100,7 +100,7 @@ export default async function handler(request, context) {
     return error(result.error.message, valuesRes.status || 400);
   }
 
-  // Cache the full sheet so other ranges reuse it within 30 seconds.
+  // Cache the full sheet so other ranges reuse it within 60 seconds.
   const fullValues = result.values || [];
   localSet(localCacheKey, fullValues);
 
@@ -190,7 +190,7 @@ function serialize(rows) {
   return new Response(JSON.stringify(rows), {
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "s-maxage=30",
+      "Cache-Control": "s-maxage=60",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
     },

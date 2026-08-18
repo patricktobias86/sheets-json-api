@@ -1,4 +1,4 @@
-import test from 'node:test';
+import test, { mock } from 'node:test';
 import assert from 'node:assert';
 import handler from '../functions/opensheet.js';
 import { localClear } from '../functions/cache.js';
@@ -98,7 +98,7 @@ test('uses Deno env when process env missing', async () => {
   process.env.GOOGLE_API_KEY = originalKey;
 });
 
-test('serves repeated requests from local cache within 30 seconds', async () => {
+test('serves repeated requests from local cache within 60 seconds', async () => {
   // No edge Cache API in this test — only the local in-memory cache.
   delete globalThis.caches;
 
@@ -122,7 +122,7 @@ test('serves repeated requests from local cache within 30 seconds', async () => 
   assert.deepStrictEqual(firstData, [{ name: 'Ada' }]);
   assert.strictEqual(requests.length, 2); // metadata + values fetched once
 
-  // Second request for the same spreadsheet ID is still < 30s old.
+  // Second request for the same spreadsheet ID is still < 60s old.
   const second = await handler(req, context);
   const secondData = await second.json();
   assert.deepStrictEqual(secondData, [{ name: 'Ada' }]);
@@ -172,4 +172,68 @@ test('shares one cached sheet across different ranges of the same spreadsheet', 
   assert.strictEqual(requests.length, 1); // still no additional Google API calls
 
   globalThis.fetch = originalFetch;
+});
+test('expires the cache after 60 seconds without any request', async () => {
+  mock.timers.enable({ apis: ['Date'] });
+  try {
+    delete globalThis.caches;
+    let calls = 0;
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => {
+      calls++;
+      return new Response(JSON.stringify({ values: [['name'], ['Ada']] }));
+    };
+
+    const url = 'https://example.com/expiry-sheet/Sheet1!A:B';
+    mock.timers.setTime(1_000_000_000);
+
+    // First request fetches the full sheet (cache miss).
+    await handler(new Request(url), context);
+    assert.strictEqual(calls, 1);
+
+    // Same range at +15s: served from cache, no extra fetch.
+    mock.timers.setTime(1_000_015_000);
+    await handler(new Request(url), context);
+    assert.strictEqual(calls, 1);
+
+    // 61s after the last request (76s total): window expired, so it fetches.
+    mock.timers.setTime(1_000_076_000);
+    await handler(new Request(url), context);
+    assert.strictEqual(calls, 2);
+
+    globalThis.fetch = originalFetch;
+  } finally {
+    mock.timers.reset();
+  }
+});
+
+test('keeps serving from cache while requests arrive within 60s', async () => {
+  mock.timers.enable({ apis: ['Date'] });
+  try {
+    delete globalThis.caches;
+    let calls = 0;
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => {
+      calls++;
+      return new Response(JSON.stringify({ values: [['name'], ['Ada']] }));
+    };
+
+    const url = 'https://example.com/warm-sheet/Sheet1!A:B';
+    mock.timers.setTime(1_000_000_000);
+
+    await handler(new Request(url), context);
+    assert.strictEqual(calls, 1);
+
+    // A request every 30s keeps the sliding window alive, even though far
+    // more than 60s elapse overall.
+    for (const offset of [30, 60, 90, 120]) {
+      mock.timers.setTime(1_000_000_000 + offset * 1000);
+      await handler(new Request(url), context);
+    }
+    assert.strictEqual(calls, 1); // every request hit the cache, no refetch
+
+    globalThis.fetch = originalFetch;
+  } finally {
+    mock.timers.reset();
+  }
 });

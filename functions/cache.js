@@ -7,8 +7,13 @@ const CACHE_TTL_MS = 60_000;
 const store = new Map();
 
 /**
- * Return the cached value for `key` if it is still fresh (< 30s old) and
+ * Return the cached value for `key` if it is still fresh (< 60s old) and
  * undefined otherwise. Expired entries are dropped lazily.
+ *
+ * The window is a *sliding* 60 seconds measured from the last request: every
+ * read of a fresh entry refreshes its age, so a sheet that keeps being asked
+ * for within 60s stays in cache. An entry only expires after 60s have passed
+ * with no request for it.
  */
 export function localGet(key) {
   const entry = store.get(key);
@@ -16,11 +21,13 @@ export function localGet(key) {
     return undefined;
   }
 
-  if (Date.now() - entry.createdAt > CACHE_TTL_MS) {
+  const now = Date.now();
+  if (now - entry.createdAt > CACHE_TTL_MS) {
     store.delete(key);
     return undefined;
   }
 
+  entry.createdAt = now;
   return entry.value;
 }
 
