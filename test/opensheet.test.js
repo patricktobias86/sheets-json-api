@@ -130,3 +130,46 @@ test('serves repeated requests from local cache within 30 seconds', async () => 
 
   globalThis.fetch = originalFetch;
 });
+
+test('shares one cached sheet across different ranges of the same spreadsheet', async () => {
+  // No edge Cache API — only the local in-memory cache.
+  delete globalThis.caches;
+
+  const spreadsheetId = '1vIoWMf607RDAVaJ0HjFyAN9JyTg_NV9MV_9AChjbfZM';
+  const requests = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    requests.push(url);
+    // Return the FULL sheet (columns A-D) as Google would for the bare range.
+    return new Response(
+      JSON.stringify({
+        values: [
+          ['name', 'age', 'city'],
+          ['Ada', '36', 'London'],
+          ['Grace', '41', 'NYC'],
+        ],
+      })
+    );
+  };
+
+  const base = `https://example.com/${spreadsheetId}/VZVODA`;
+  const reqB = new Request(`${base}!A:B`);
+  const first = await handler(reqB, context);
+  assert.deepStrictEqual(await first.json(), [
+    { name: 'Ada', age: '36' },
+    { name: 'Grace', age: '41' },
+  ]);
+  assert.strictEqual(requests.length, 1); // full sheet fetched once
+
+  // A different range of the same sheet should reuse the cached full sheet
+  // (columns A, B and C) without any new Google API call.
+  const reqC = new Request(`${base}!A:C`);
+  const secondC = await handler(reqC, context);
+  assert.deepStrictEqual(await secondC.json(), [
+    { name: 'Ada', age: '36', city: 'London' },
+    { name: 'Grace', age: '41', city: 'NYC' },
+  ]);
+  assert.strictEqual(requests.length, 1); // still no additional Google API calls
+
+  globalThis.fetch = originalFetch;
+});
