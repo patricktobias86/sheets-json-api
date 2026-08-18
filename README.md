@@ -70,9 +70,18 @@ environment or `.env` file for API requests.
 
 ### Caching
 
-Responses are cached for 30 seconds when a cache API is available (for example,
-in edge runtimes that expose `caches.default`). If the runtime does not support
-the cache API, the function skips caching but still returns live data.
+The function keeps a short-lived local, in-memory cache of spreadsheets so that
+requests for the same spreadsheet ID within 30 seconds of the previous request
+are served without hitting the Google Sheets API again. It stores both the
+spreadsheet document metadata (keyed by spreadsheet ID, used to resolve sheet
+numbers) and the per-sheet rows. This cache lives in the process's memory
+(`functions/cache.js`) and works in any runtime, including the Node.js server
+used on Coolify.
+
+When an edge Cache API is available (for example, runtimes that expose
+`caches.default`), responses are also cached for the same 30-second window. If
+neither the local memory cache nor the cache API has a fresh entry, the
+function fetches live data and stores it before responding.
 
 ### Running tests
 

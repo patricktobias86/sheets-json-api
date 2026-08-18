@@ -1,3 +1,5 @@
+import { localGet, localSet } from "./cache.js";
+
 export default async function handler(request, context) {
   const GOOGLE_API_KEY =
     (globalThis.process?.env?.GOOGLE_API_KEY ??
@@ -29,35 +31,53 @@ export default async function handler(request, context) {
     return error("URL format is /spreadsheet_id/sheet_name", 404);
   }
 
-  // Try cache first (if cache API is available)
-  const cacheKey = `${url.origin}/${id}/${encodeURIComponent(sheet)}`;
+  // Try the local in-memory cache first. Requests for the same spreadsheet
+  // (and sheet) within the last 30 seconds are served straight from it.
+  const localCacheKey = `${id}/${encodeURIComponent(sheet)}`;
+  const cachedRows = localGet(localCacheKey);
+  if (cachedRows !== undefined) {
+    console.log(`Serving from local cache: ${localCacheKey}`);
+    return jsonResponse(cachedRows);
+  }
+
+  // Try the edge Cache API if one is available (e.g. caches.default).
   const cache = globalThis.caches?.default;
   if (cache) {
+    const cacheKey = `${url.origin}/${localCacheKey}`;
     const cachedResponse = await cache.match(cacheKey);
     if (cachedResponse) {
       console.log(`Serving from cache: ${cacheKey}`);
       return cachedResponse;
-    } else {
-      console.log(`Cache miss: ${cacheKey}`);
     }
+    console.log(`Cache miss: ${cacheKey}`);
   }
 
   // Normalize sheet (handle '+' and decode)
   sheet = decodeURIComponent(sheet.replace(/\+/g, " "));
 
-  // If numeric, treat as 1-based sheet index and look up sheet title
+  // If numeric, treat as 1-based sheet index and look up sheet title. The
+  // spreadsheet metadata is cached locally by spreadsheet ID so repeated
+  // requests (even for different sheets of the same spreadsheet) don't
+  // re-fetch it.
   if (!isNaN(sheet)) {
     if (parseInt(sheet, 10) === 0) {
       return error("For this API, sheet numbers start at 1");
     }
 
-    const sheetMetaRes = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${id}?key=${GOOGLE_API_KEY}`
-    );
-    const sheetData = await sheetMetaRes.json();
+    const metadataCacheKey = `spreadsheet:${id}`;
+    let sheetData = localGet(metadataCacheKey);
 
-    if (sheetData?.error) {
-      return error(sheetData.error.message, sheetMetaRes.status || 400);
+    if (sheetData === undefined) {
+      const sheetMetaRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${id}?key=${GOOGLE_API_KEY}`
+      );
+      sheetData = await sheetMetaRes.json();
+
+      if (sheetData?.error) {
+        return error(sheetData.error.message, sheetMetaRes.status || 400);
+      }
+
+      localSet(metadataCacheKey, sheetData);
     }
 
     const sheetIndex = parseInt(sheet, 10) - 1;
@@ -93,7 +113,22 @@ export default async function handler(request, context) {
     rows.push(rowData);
   });
 
-  const apiResponse = new Response(JSON.stringify(rows), {
+  // Store the spreadsheet response in the local cache for the next 30 seconds.
+  const apiResponse = jsonResponse(rows);
+  localSet(localCacheKey, rows);
+
+  // Also write to the edge Cache API in the background, when available.
+  if (cache) {
+    context.waitUntil(
+      cache.put(`${url.origin}/${localCacheKey}`, apiResponse.clone())
+    );
+  }
+
+  return apiResponse;
+}
+
+function jsonResponse(data) {
+  return new Response(JSON.stringify(data), {
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "s-maxage=30",
@@ -101,13 +136,6 @@ export default async function handler(request, context) {
       "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
     },
   });
-
-  // Write to cache in the background
-  if (cache) {
-    context.waitUntil(cache.put(cacheKey, apiResponse.clone()));
-  }
-
-  return apiResponse;
 }
 
 function error(message, status = 400) {
