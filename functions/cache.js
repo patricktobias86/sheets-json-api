@@ -2,7 +2,7 @@
 // spreadsheet + sheet). It lets us serve repeated requests for the same
 // spreadsheet without hitting the Google Sheets API again as long as the
 // previous request was less than CACHE_TTL_MS ago.
-const CACHE_TTL_MS = 30_000;
+const CACHE_TTL_MS = 60_000;
 
 const store = new Map();
 
