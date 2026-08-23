@@ -11,6 +11,7 @@
 - Functions are in `functions`.
 - Keep README and AGENTS.md updated when changes are made
 - Sensitive values like API keys must come from environment variables; do not commit secrets.
+- Landing page PostHog configuration comes from `/posthog-config.json` and stays disabled when its environment variables are missing.
 - Pull requests to `main` run `npm test` via GitHub Actions.
 - Dependabot checks npm packages and GitHub Actions weekly.
 - Tests are located in `test` and run with `npm test`.

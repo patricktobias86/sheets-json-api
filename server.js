@@ -12,6 +12,16 @@ const publicDir = path.join(__dirname, "public");
 
 const port = process.env.PORT || 3000;
 
+function servePostHogConfig(res) {
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.end(JSON.stringify({
+    apiKey: process.env.POSTHOG_API_KEY || "",
+    host: process.env.POSTHOG_HOST || "",
+  }));
+}
+
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -57,6 +67,11 @@ function serveStatic(pathname, res) {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
+
+  if (url.pathname === "/posthog-config.json") {
+    servePostHogConfig(res);
+    return;
+  }
 
   // Always serve the landing page for "/"
   if (url.pathname === "/") {

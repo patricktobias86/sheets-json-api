@@ -5,6 +5,8 @@ services:
     image: sheets-json-api:local
     environment:
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
+      POSTHOG_HOST: ${POSTHOG_HOST:-}
     expose:
       - "3000"
     restart: unless-stopped

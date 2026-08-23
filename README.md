@@ -52,6 +52,9 @@ at the root URL and forwards API requests to the handler in
 
 The function requires a `GOOGLE_API_KEY` value using `process.env` in Node or
 `Deno.env.get`. If the variable is missing, the function responds with an error.
+Set `POSTHOG_API_KEY` and `POSTHOG_HOST` to enable server events and browser
+analytics on the landing page. Browser analytics stays disabled if either value
+is missing.
 Copy `.env.example` to `.env` for local Docker Compose usage, or export the
 variables in your shell before starting the app.
 
@@ -68,8 +71,8 @@ The local override publishes the app at `http://localhost:3000` by default.
 
 Search engine files are available at `/robots.txt` and `/sitemap.xml`.
 
-Set `PORT` to change the local host port, and set `GOOGLE_API_KEY` in the
-environment or `.env` file for API requests.
+Set `PORT` to change the local host port. Set API and PostHog values in the
+environment or `.env` file.
 
 ### Caching
 
