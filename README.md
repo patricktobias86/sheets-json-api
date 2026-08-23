@@ -65,6 +65,9 @@ docker compose -f compose.yml -f compose.local.yml up --build
 ```
 
 The local override publishes the app at `http://localhost:3000` by default.
+
+Search engine files are available at `/robots.txt` and `/sitemap.xml`.
+
 Set `PORT` to change the local host port, and set `GOOGLE_API_KEY` in the
 environment or `.env` file for API requests.
 
