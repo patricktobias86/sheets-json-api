@@ -51,18 +51,18 @@
     "mainEntity":[
       {
         "@type":"Question",
-        "name":"Do I need an API key?",
-        "acceptedAnswer":{"@type":"Answer","text":"No. This page uses public Google Sheets endpoints. Share your Sheet as “Anyone with the link: Viewer.”"}
+        "name":"What does this service cost?",
+        "acceptedAnswer":{"@type":"Answer","text":"It is completely free. The service has been running for free for several years, and we have no plans to charge anyone."}
       },
       {
         "@type":"Question",
-        "name":"What URL format does it output?",
-        "acceptedAnswer":{"@type":"Answer","text":"https://sheets.primehosting.dev/{sheetId}/{tabIndex} — you can copy it directly."}
+        "name":"Does it cache my spreadsheet?",
+        "acceptedAnswer":{"@type":"Answer","text":"Yes. When you request your spreadsheet as JSON, we cache it for 60 seconds. Additional requests during that time are served from the cache."}
       },
       {
         "@type":"Question",
-        "name":"How is the preview generated?",
-        "acceptedAnswer":{"@type":"Answer","text":"We fetch the Google GViz JSON for the exact gid included in your pasted URL and pretty-print it."}
+        "name":"Is this open source?",
+        "acceptedAnswer":{"@type":"Answer","text":"Yes. This service is fully open source. You can find the repository at https://github.com/patricktobias86/sheets-json-api."}
       }
     ]
   }
@@ -167,6 +167,11 @@
     .section-title{ margin:0 0 10px }
     .section-header{ display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); flex-wrap:wrap }
     .status-line{ margin:var(--space-2) 0 10px }
+    .faq-list{ display:grid; gap:var(--space-4); margin:0 }
+    .faq-item{ padding-bottom:var(--space-4); border-bottom:1px solid var(--border) }
+    .faq-item:last-child{ padding-bottom:0; border-bottom:0 }
+    .faq-item dt{ font-weight:700; font-size:var(--text-md) }
+    .faq-item dd{ margin:var(--space-2) 0 0; color:var(--muted) }
 
     .field{ display:grid; gap:var(--space-2); margin:12px 0; }
     label{ font-size:14px; color:var(--muted) }
@@ -280,6 +285,25 @@
       </div>
       <div id="previewStatus" class="hint status-line" role="status"></div>
       <pre id="preview" class="preview" aria-label="Preview area">{ /* Build API URL, then click “Fetch JSON preview” */ }</pre>
+    </section>
+
+    <!-- FAQ -->
+    <section class="card section-stack" aria-labelledby="faq-title">
+      <h2 id="faq-title" class="section-title">Frequently asked questions</h2>
+      <dl class="faq-list">
+        <div class="faq-item">
+          <dt>What does this service cost?</dt>
+          <dd>It’s completely free. The service has been running for free for several years, and we have no plans to charge anyone.</dd>
+        </div>
+        <div class="faq-item">
+          <dt>Does it cache my spreadsheet?</dt>
+          <dd>Yes. When you request your spreadsheet as JSON, we cache it for 60 seconds. Additional requests during that time are served from the cache.</dd>
+        </div>
+        <div class="faq-item">
+          <dt>Is this open source?</dt>
+          <dd>Yes. This service is fully open source. You can find the repository <a href="https://github.com/patricktobias86/sheets-json-api">on GitHub</a>.</dd>
+        </div>
+      </dl>
     </section>
 
     <footer>

@@ -14,7 +14,8 @@ also exposes a simple `robots.txt` that allows all crawlers.
 The landing page keeps its small design system in the embedded stylesheet in
 `public/index.html`: shared color, spacing, type, radius, and shadow tokens live
 in `:root`, with reusable classes for section spacing, headings, focus states,
-and generated output.
+and generated output. It also includes a visible FAQ with matching `FAQPage`
+JSON-LD structured data for search engines.
 
 ## Usage
 
