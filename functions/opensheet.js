@@ -1,4 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { localGet, localSet } from "./cache.js";
+import posthog from "../posthog.js";
 
 export default async function handler(request, context) {
   const GOOGLE_API_KEY =
@@ -9,6 +11,7 @@ export default async function handler(request, context) {
   }
 
   const url = new URL(request.url);
+  const requestId = randomUUID();
 
   if (url.pathname === "/") {
     return context.next();
@@ -51,6 +54,18 @@ export default async function handler(request, context) {
       sheetData = await sheetMetaRes.json();
 
       if (sheetData?.error) {
+        if (posthog) {
+          posthog.capture({
+            distinctId: requestId,
+            event: "sheet_fetch_error",
+            properties: {
+              spreadsheet_id: id,
+              error_message: sheetData.error.message,
+              status_code: sheetMetaRes.status || 400,
+              stage: "metadata",
+            },
+          });
+        }
         return error(sheetData.error.message, sheetMetaRes.status || 400);
       }
 
@@ -74,7 +89,21 @@ export default async function handler(request, context) {
   const cachedValues = localGet(localCacheKey);
   if (cachedValues !== undefined) {
     context.servedFromCache = true;
-    return serialize(buildRows(slice(cachedValues, parsed)));
+    const rows = buildRows(slice(cachedValues, parsed));
+    if (posthog) {
+      posthog.capture({
+        distinctId: requestId,
+        event: "sheet_fetched",
+        properties: {
+          spreadsheet_id: id,
+          sheet_name: parsed.name,
+          row_count: rows.length,
+          served_from_cache: true,
+          cache_type: "local",
+        },
+      });
+    }
+    return serialize(rows);
   }
 
   // Edge Cache API fallback (exact per-range responses).
@@ -84,6 +113,18 @@ export default async function handler(request, context) {
     const cachedResponse = await cache.match(cacheKey);
     if (cachedResponse) {
       context.servedFromCache = true;
+      if (posthog) {
+        posthog.capture({
+          distinctId: requestId,
+          event: "sheet_fetched",
+          properties: {
+            spreadsheet_id: id,
+            sheet_name: parsed.name,
+            served_from_cache: true,
+            cache_type: "edge",
+          },
+        });
+      }
       return cachedResponse;
     }
   }
@@ -96,6 +137,18 @@ export default async function handler(request, context) {
   const result = await valuesRes.json();
 
   if (result?.error) {
+    if (posthog) {
+      posthog.capture({
+        distinctId: requestId,
+        event: "sheet_fetch_error",
+        properties: {
+          spreadsheet_id: id,
+          sheet_name: parsed.name,
+          error_message: result.error.message,
+          status_code: valuesRes.status || 400,
+        },
+      });
+    }
     return error(result.error.message, valuesRes.status || 400);
   }
 
@@ -103,7 +156,20 @@ export default async function handler(request, context) {
   const fullValues = result.values || [];
   localSet(localCacheKey, fullValues);
 
-  const apiResponse = serialize(buildRows(slice(fullValues, parsed)));
+  const rows = buildRows(slice(fullValues, parsed));
+  if (posthog) {
+    posthog.capture({
+      distinctId: requestId,
+      event: "sheet_fetched",
+      properties: {
+        spreadsheet_id: id,
+        sheet_name: parsed.name,
+        row_count: rows.length,
+        served_from_cache: false,
+      },
+    });
+  }
+  const apiResponse = serialize(rows);
 
   if (cache) {
     context.waitUntil(

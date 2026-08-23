@@ -1,8 +1,10 @@
+import "dotenv/config";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import handler from "./functions/opensheet.js";
+import posthog from "./posthog.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -116,6 +118,13 @@ const server = http.createServer(async (req, res) => {
     res.end(Buffer.from(body));
   } catch (error) {
     console.error("Error handling request:", error);
+    if (posthog) {
+      posthog.captureException(error, undefined, {
+        path: url.pathname,
+        method: req.method,
+      });
+      await posthog.flush();
+    }
     if (!res.headersSent) {
       res.statusCode = 500;
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
@@ -126,4 +135,14 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`);
+});
+
+process.on("SIGINT", async () => {
+  if (posthog) await posthog.shutdown();
+  process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+  if (posthog) await posthog.shutdown();
+  process.exit(0);
 });
