@@ -249,7 +249,7 @@
                 <input id="tabIndex" name="tabIndex" type="number" min="1" step="1" placeholder="1" aria-describedby="indexHint">
               </div>
             </div>
-            <div class="hint" id="urlHint">Share as “Anyone with the link: Viewer”. The index defaults to 1; change if your tab is different.</div>
+            <div class="hint" id="urlHint">Share as “Anyone with the link: Viewer”. Tab index is its position: 1 for the first tab, 2 for the second.</div>
             <div class="hint" id="indexHint"></div>
             <div id="urlError" class="error" role="alert" hidden></div>
           </div>
@@ -478,7 +478,7 @@
       }else{
         setPreviewStatus('API URL ready. You can fetch a preview now.', true);
         // try to hint which tab user copied (we can't know the index, but we can surface gid)
-        document.getElementById('indexHint').textContent = `Detected gid=${gid}. Set the Tab index that corresponds to this tab in your service (e.g., 1 for the second tab in your example).`;
+        document.getElementById('indexHint').textContent = `Selected tab has gid=${gid}. Enter its position in the sheet above; gid and Tab index are different.`;
       }
     });
 

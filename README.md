@@ -21,6 +21,8 @@ JSON-LD structured data for search engines.
 
 Requests follow the pattern `/SPREADSHEET_ID/sheet_name_or_number`. If the sheet
 segment is omitted, the request will redirect to the first sheet (`/1`).
+Sheet numbers use their left-to-right position: `1` is the first tab, `2` is
+the second, and so on. This number is not the `gid` shown in a Google Sheets URL.
 
 Example:
 
