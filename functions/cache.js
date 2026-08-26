@@ -1,18 +1,25 @@
 // In-memory cache with a short TTL, keyed by spreadsheet ID (and by
 // spreadsheet + sheet). It lets us serve repeated requests for the same
 // spreadsheet without hitting the Google Sheets API again as long as the
-// previous request was less than CACHE_TTL_MS ago.
-const CACHE_TTL_MS = 60_000;
+// previous request was less than the configured TTL ago.
+const configuredTtl = Number(
+  globalThis.process?.env?.CACHE_TTL_S ??
+    globalThis.Deno?.env?.get("CACHE_TTL_S") ??
+    60
+);
+export const CACHE_TTL_SECONDS =
+  Number.isInteger(configuredTtl) && configuredTtl > 0 ? configuredTtl : 60;
+const CACHE_TTL_MS = CACHE_TTL_SECONDS * 1000;
 
 const store = new Map();
 
 /**
- * Return the cached value for `key` if it is still fresh (< 60s old) and
+ * Return the cached value for `key` if it is still fresh and
  * undefined otherwise. Expired entries are dropped lazily.
  *
- * The window is a *sliding* 60 seconds measured from the last request: every
+ * The window is a *sliding* TTL measured from the last request: every
  * read of a fresh entry refreshes its age, so a sheet that keeps being asked
- * for within 60s stays in cache. An entry only expires after 60s have passed
+ * for within the TTL stays in cache. An entry only expires after the TTL has passed
  * with no request for it.
  */
 export function localGet(key) {

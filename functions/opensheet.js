@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { localGet, localSet } from "./cache.js";
+import { CACHE_TTL_SECONDS, localGet, localSet } from "./cache.js";
 import posthog from "../posthog.js";
 
 export default async function handler(request, context) {
@@ -152,7 +152,7 @@ export default async function handler(request, context) {
     return error(result.error.message, valuesRes.status || 400);
   }
 
-  // Cache the full sheet so other ranges reuse it within 60 seconds.
+  // Cache the full sheet so other ranges reuse it within the configured TTL.
   const fullValues = result.values || [];
   localSet(localCacheKey, fullValues);
 
@@ -255,7 +255,7 @@ function serialize(rows) {
   return new Response(JSON.stringify(rows), {
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "s-maxage=60",
+      "Cache-Control": `s-maxage=${CACHE_TTL_SECONDS}`,
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
     },
